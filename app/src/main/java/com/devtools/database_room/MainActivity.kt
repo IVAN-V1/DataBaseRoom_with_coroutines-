@@ -16,7 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -85,20 +89,24 @@ fun UIView() {
     var hayError_apellido by remember { mutableStateOf(false) }
     var mensajeError_apellido by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
 
-        corutineScope.launch(Dispatchers.IO) {
-            val users = userDao.getAll()
 
-            withContext(Dispatchers.Main) {
-                // Actualiza la UI con los datos obtenidos
-                // Puedes usar un estado para almacenar los usuarios y mostrarlos en la UI
+    val refreshUserList = remember {
+        {
+            corutineScope.launch(Dispatchers.IO) {
 
-                lista_users = users
+                val users = userDao.getAll()
+
+                withContext(Dispatchers.Main) {
+                    lista_users = users
+                }
 
             }
         }
+    }
 
+    LaunchedEffect(Unit) {
+        refreshUserList()
     }
 
 
@@ -229,12 +237,10 @@ fun UIView() {
 
                                 userDao.insertAll(User_)
 
-
                                 withContext(Dispatchers.Main) {
 
+                                    refreshUserList()
                                     Toast.makeText(currentContext, "Usuario agregado", Toast.LENGTH_SHORT).show()
-
-
                                 }
 
 
@@ -257,8 +263,7 @@ fun UIView() {
 
                     items(lista_users.size) { user ->
 
-                        List(modelUser = lista_users[user])
-
+                        List(modelUser = lista_users[user], refreshList = {refreshUserList()})
                     }
 
                 }
@@ -276,7 +281,18 @@ fun UIView() {
 
 
 @Composable
-fun List(modelUser: ModelUser) {
+fun List(modelUser: ModelUser, refreshList: () -> Unit) {
+
+    lateinit var db: AppDatabase
+    lateinit var userDao: UserDao
+
+
+    //Room
+    val currentContext = LocalContext.current
+    db = AppDatabase.getDatabase(currentContext)
+    userDao = db.userDao()
+
+    val corutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -289,6 +305,39 @@ fun List(modelUser: ModelUser) {
         Text(text = "ID: ${modelUser.id}")
         Text(text = "Nombre: ${modelUser.firstName}")
         Text(text = "Apellido: ${modelUser.lastName}")
+
+       IconButton(onClick = {
+
+
+           // background thread [backend]
+           corutineScope.launch (Dispatchers.IO){
+
+              userDao.deleteById(modelUser.id ?: 0)
+
+
+               // Main thread [Design]
+               withContext(Dispatchers.Main) {
+
+
+                   refreshList()
+                   Toast.makeText(currentContext, "User Delete", Toast.LENGTH_SHORT).show()
+
+
+               }
+
+
+           }
+
+
+       }) {
+
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete",
+                tint = Color.Red
+            )
+        }
+
 
     }
 
