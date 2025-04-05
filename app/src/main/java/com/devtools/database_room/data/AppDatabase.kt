@@ -1,6 +1,8 @@
+package com.devtools.database_room.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.devtools.database_room.Model.ModelUser
 
 @Database(entities = [ModelUser::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {

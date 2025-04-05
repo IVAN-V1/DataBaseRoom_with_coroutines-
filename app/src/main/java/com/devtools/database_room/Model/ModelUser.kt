@@ -1,4 +1,4 @@
-
+package com.devtools.database_room.Model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -1,6 +1,9 @@
+package com.devtools.database_room.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.devtools.database_room.Model.ModelUser
+
 
 @Dao
 interface UserDao {
