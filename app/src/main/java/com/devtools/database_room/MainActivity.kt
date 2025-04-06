@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +19,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +67,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UIView() {
 
@@ -88,7 +94,6 @@ fun UIView() {
 
     var hayError_apellido by remember { mutableStateOf(false) }
     var mensajeError_apellido by remember { mutableStateOf("") }
-
 
 
     val refreshUserList = remember {
@@ -240,7 +245,11 @@ fun UIView() {
                                 withContext(Dispatchers.Main) {
 
                                     refreshUserList()
-                                    Toast.makeText(currentContext, "Usuario agregado", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        currentContext,
+                                        "Usuario agregado",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
 
 
@@ -258,12 +267,14 @@ fun UIView() {
                 }
 
 
+
+
                 LazyColumn {
 
 
                     items(lista_users.size) { user ->
 
-                        List(modelUser = lista_users[user], refreshList = {refreshUserList()})
+                        List(modelUser = lista_users[user], refreshList = { refreshUserList() })
                     }
 
                 }
@@ -280,6 +291,7 @@ fun UIView() {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun List(modelUser: ModelUser, refreshList: () -> Unit) {
 
@@ -294,6 +306,18 @@ fun List(modelUser: ModelUser, refreshList: () -> Unit) {
 
     val corutineScope = rememberCoroutineScope()
 
+
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var hayError_nombre by remember { mutableStateOf(false) }
+    var mensajeError_nombre by remember { mutableStateOf("") }
+    var hayError_apellido by remember { mutableStateOf(false) }
+    var mensajeError_apellido by remember { mutableStateOf("") }
+
+
+    var nombre by remember { mutableStateOf("") }
+    var apelido by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -306,30 +330,30 @@ fun List(modelUser: ModelUser, refreshList: () -> Unit) {
         Text(text = "Nombre: ${modelUser.firstName}")
         Text(text = "Apellido: ${modelUser.lastName}")
 
-       IconButton(onClick = {
+        IconButton(onClick = {
 
 
-           // background thread [backend]
-           corutineScope.launch (Dispatchers.IO){
+            // background thread [backend]
+            corutineScope.launch(Dispatchers.IO) {
 
-              userDao.deleteById(modelUser.id ?: 0)
-
-
-               // Main thread [Design]
-               withContext(Dispatchers.Main) {
+                userDao.deleteById(modelUser.id ?: 0)
 
 
-                   refreshList()
-                   Toast.makeText(currentContext, "User Delete", Toast.LENGTH_SHORT).show()
+                // Main thread [Design]
+                withContext(Dispatchers.Main) {
 
 
-               }
+                    refreshList()
+                    Toast.makeText(currentContext, "User Delete", Toast.LENGTH_SHORT).show()
 
 
-           }
+                }
 
 
-       }) {
+            }
+
+
+        }) {
 
             Icon(
                 imageVector = Icons.Default.Delete,
@@ -339,9 +363,152 @@ fun List(modelUser: ModelUser, refreshList: () -> Unit) {
         }
 
 
+        IconButton(onClick = {
+
+
+            showBottomSheet = true
+
+
+        }) {
+
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = "Delete",
+                tint = Color.Red
+            )
+        }
+
+
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = sheetState
+            ) {
+
+
+                TextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = nombre,
+                    onValueChange = { nuevoTexto ->
+                        nombre = nuevoTexto
+
+                    },
+                    label = { Text("Introduce Nombre") },
+                    placeholder = { Text("Ej: Carlos") },
+                    isError = hayError_nombre,
+
+                    supportingText = {
+                        if (hayError_nombre) {
+                            Text(
+                                text = mensajeError_nombre,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            Text(text = "Introduce al menos 3 caracteres")
+                        }
+
+
+                    }
+                )
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+
+
+
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = apelido,
+
+                        onValueChange = { nuevoTexto ->
+                            apelido = nuevoTexto
+
+                        },
+
+                        label = { Text("Introduce Apellido") },
+                        placeholder = { Text("Ej: Martinez") },
+                        isError = hayError_apellido,
+
+                        supportingText = {
+
+                            if (hayError_apellido) {
+                                Text(
+                                    text = mensajeError_apellido,
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                                )
+                            } else {
+                                Text(text = "Introduce al menos 3 caracteres")
+                            }
+
+
+                        }
+                    )
+
+
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Blue)
+                            .padding(horizontal = 16.dp),
+
+
+                        onClick = {
+
+
+                            if (nombre.isEmpty() || apelido.isEmpty()) {
+                                hayError_nombre = true
+                                mensajeError_nombre = "Este campo no puede estar vacío"
+                                hayError_apellido = true
+                                mensajeError_apellido = "Este campo no puede estar vacío"
+                            } else if (nombre.length < 3 || apelido.length < 3) {
+                                hayError_nombre = true
+                                mensajeError_nombre = "El texto debe tener al menos 3 caracteres"
+                                hayError_apellido = true
+                                mensajeError_apellido = "El texto debe tener al menos 3 caracteres"
+                            } else {
+
+                            // background thread [backend]
+                            corutineScope.launch(Dispatchers.IO) {
+
+                                userDao.updateById(modelUser.id ?: 0, nombre, apelido)
+
+
+                                // Main thread [Design]
+                                withContext(Dispatchers.Main) {
+
+                                    refreshList()
+                                    Toast.makeText(
+                                        currentContext,
+                                        "Date Update",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    showBottomSheet = false
+
+                                }
+
+                            }
+
+                            }
+
+
+                        }
+                    ) {
+                        Text("update")
+                    }
+
+
+                }
+            }
+
+        }
+
     }
 
-}
+
 
 
 

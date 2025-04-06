@@ -27,4 +27,9 @@ interface UserDao {
     @Query("DELETE FROM users WHERE id = :id")
     fun deleteById(id: Int)
 
+
+    @Query("update users SET first_name = :first, last_name = :last WHERE id = :id")
+    fun updateById(id: Int, first: String, last: String)
+
+
 }

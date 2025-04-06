@@ -5,7 +5,7 @@ follow the steps in the commits
 
 
 > [!WARNING] 
-> # only methods Insert and Delete
+> # only methods Insert, Delete and update
 
 
 > [!WARNING] 
@@ -22,3 +22,7 @@ follow the steps in the commits
 | captures 3 | captures 4 |  
 | -------- | -------- |
 | ![Ejemplo de imagen](./captures/3.png) | ![Ejemplo de imagen](./captures/4.png) |
+
+| captures 5                             | captures 6                             |  
+|----------------------------------------|----------------------------------------|
+| ![Ejemplo de imagen](./captures/5.png) | ![Ejemplo de imagen](./captures/6.png) |
